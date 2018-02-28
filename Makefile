@@ -1,49 +1,33 @@
-#******************************************************************************#
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    Makefile                                           :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: lberezyn <marvin@42.fr>                    +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2018/02/28 16:17:11 by lberezyn          #+#    #+#              #
-#    Updated: 2018/02/28 16:17:16 by lberezyn         ###   ########.fr        #
-#                                                                              #
-#******************************************************************************#
-
-NAME = RT
-
-SRC = src/hooks.c \
-	  src/create.c \
-	  src/scenes.c \
-	  src/scene.c \
-	  src/vectors.c \
-	  src/draw.c \
-	  src/figures.c \
-	  src/main.c \
-	  src/trace.c \
-
-OFILES = $(SRC:.c=.o)
-
-FLAG = -Wall -Wextra -Werror -O3
+CC=clang
+CFLAGS=-Werror -Wall -Wextra -O3 -Iincludes/
+OS := $(shell uname)
+ifeq ($(OS), Darwin)
+FRAMEWORKS= -lmlx -framework OpenGL -framework AppKit
+else
+FRAMEWORKS= -lmlx -lXext -lX11 -lm
+endif
+FILES=main rt_draw rt_handler rt_trace rt_construct_ray rt_intersect ray_normalize point_substract dot_product rt_helpers rt_solve_quadratic rt_get_intersect rt_normal rt_shade rt_operations rt_rotations rt_scene_1 rt_scene_2 rt_scene_3 rt_scene_4 rt_scene_5 rt_scene_6 rt_scene_7 rt_scene_8 rt_scene_9 rt_scene_10 rt_scene_11 rt_scene_12
+OBJ=$(addprefix obj/, $(addsuffix .o, $(FILES)))
+NAME=RTv1
 
 all: $(NAME)
 
-$(NAME):  $(OFILES) include/ft_rtv.h
-	@make -C libft
-	@clang $(FLAG) -L./libft -lft $(OFILES) -o $(NAME) -lmlx -framework OpenGL -framework AppKit
-	@echo "$(NAME) SUCCESSFULLY compiled"
-
-%.o : src/%.c include/ft_rtv.h
-	@clang $(FLAG) -o $@ -c $<
-
+$(NAME): $(OBJ) libft/libft.a
+	@$(CC) -o $(NAME) $(OBJ) $(CFLAGS) $(FRAMEWORKS) libft/libft.a
+	@echo "Binary is done! 🖥"
+libft/libft.a:
+	@make -C libft/
+	@echo "Library is done!📚"
+obj/%.o: src/%.c
+	@$(CC) -c $^ -o $@ $(CFLAGS)
 clean:
-	rm -f $(OFILES)
-	make -C libft clean
-
+	@rm -f $(OBJ)
+	@make -C libft/ clean
+	@echo "Cleaned the objects! ❌"
 fclean: clean
-	rm -f $(NAME)
-	make -C libft fclean
-
+	@rm -f $(NAME)
+	@make -C libft/ fclean
+	@echo "Cleaned the binary! ☠️"
 re: fclean all
-
-.PHONY: all, clean, fclean, re
+	
+.PHONY: clean fclean re
