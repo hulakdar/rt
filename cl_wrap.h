@@ -1,10 +1,18 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   cl_wrap.h                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: skamoza <marvin@42.fr>                     +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2018/03/02 17:34:10 by skamoza           #+#    #+#             */
+/*   Updated: 2018/03/02 18:07:27 by skamoza          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef CL_WRAP_H
 # define CL_WRAP_H
-# define HEIGHT 800
-# define WIDTH 800
 # define MAX_SOURCE_SIZE (0x100000)
-# include <pthread.h>
-# include <math.h>
 # ifdef __APPLE__
 #  include <OpenCL/opencl.h>
 # else
@@ -22,51 +30,84 @@ typedef struct	s_cl_info
 	cl_program			program;
 	cl_platform_id		platform;
 }				t_cl_info;
-typedef union	u_color
+typedef struct	s_kernel
 {
-	int			color;
-	t_byte		channel[4];
-}				t_color;
+	t_cl_info	*info;
+	cl_kernel	kernel;
+	cl_uint		args;
+}				t_kernel;
 
 /*
- * Funcion to initialize the struct, getting the platform, devices,
- * context and command queue.
- */
-void	rt_cl_init(t_cl_info *info);
+** Funcion to initialize the struct, getting the platform, devices,
+** context and command queue.
+*/
+void			rt_cl_init(t_cl_info *info);
 
-/* Creating read-only buffer.
- */
-cl_mem	rt_cl_malloc_read(t_cl_info *info, size_t size);
+/*
+** Creating read-only buffer.
+*/
+cl_mem			rt_cl_malloc_read(t_cl_info *info, size_t size);
 
-/* Creating write-only buffer.
- */
-cl_mem	rt_cl_malloc_write(t_cl_info *info, size_t size);
+/*
+** Creating write-only buffer.
+*/
+cl_mem			rt_cl_malloc_write(t_cl_info *info, size_t size);
 
-/* Writing data to devices' memory.
- */
-cl_int	rt_cl_host_to_device(
+/*
+** Writing data to devices' memory.
+*/
+cl_int			rt_cl_host_to_device(
 							t_cl_info *info,
 							cl_mem obj,
 							void *src,
 							size_t size);
 
-/* Reading data from devices' memory.
- */
-cl_int	rt_cl_device_to_host(
+/*
+** Reading data from devices' memory.
+*/
+cl_int			rt_cl_device_to_host(
 							t_cl_info *info,
 							cl_mem obj,
 							void *dest,
 							size_t size);
 
-/* Compiling the program from source.
- */
-cl_int	rt_cl_compile(t_cl_info *info, char *path);
+/*
+** Compiling the program from source.
+*/
+cl_int			rt_cl_compile(t_cl_info *info, char *path);
 
-/* Waiting for every task in queue to complete.
- */
-void	rt_cl_join(t_cl_info *info);
+/*
+** Waiting for every task in queue to complete.
+*/
+void			rt_cl_join(t_cl_info *info);
 
-/* Destruction of program, command_queue and context.
- */
-void	rt_cl_free(t_cl_info *info);
+/*
+** Destruction of program, command_queue and context.
+*/
+void			rt_cl_free(t_cl_info *info);
+
+/*
+** Destruction of kernel.
+*/
+void		rt_cl_free_kernel(t_kernel *kernel);
+
+/*
+** Creating a kernel.
+*/
+t_kernel		rt_cl_create_kernel(t_cl_info *info, char *name);
+
+/*
+** Pushing the next argument to the kernel.
+*/
+void			rt_cl_push_arg(t_kernel *kernel, void *src, size_t size);
+
+/*
+** Forget the old args.
+*/
+void			rt_cl_drop_arg(t_kernel *kernel);
+
+/*
+** Start working with "size" number of threads.
+*/
+void			rt_cl_push_task(t_kernel *kernel, size_t size);
 #endif
