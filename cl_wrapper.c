@@ -131,7 +131,7 @@ cl_mem		rt_cl_malloc_read(t_cl_info *info, size_t size)
 	status = CL_SUCCESS;
 	ret = clCreateBuffer(
 				info->context,
-				CL_MEM_READ_ONLY,
+				CL_MEM_READ_WRITE,
 				size,
 				NULL,
 				&status);
@@ -139,7 +139,7 @@ cl_mem		rt_cl_malloc_read(t_cl_info *info, size_t size)
 	check_error(status);
 }
 
-cl_mem		rt_cl_malloc_write(t_cl_info *info, size_t size)
+cl_mem		rt_cl_malloc_write(t_cl_info *info, size_t size, void *ptr)
 {
 	cl_int		status;
 	
@@ -147,9 +147,9 @@ cl_mem		rt_cl_malloc_write(t_cl_info *info, size_t size)
 	cl_mem		ret;
 	ret = clCreateBuffer(
 				info->context,
-				CL_MEM_WRITE_ONLY,
+				CL_MEM_HOST_PTR,
 				size,
-				NULL,
+				ptr,
 				&status);
 	return (ret);
 	check_error(status);
