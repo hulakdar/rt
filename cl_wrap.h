@@ -51,7 +51,7 @@ cl_mem			rt_cl_malloc_read(t_cl_info *info, size_t size);
 /*
 ** Creating write-only buffer.
 */
-cl_mem			rt_cl_malloc_write(t_cl_info *info, size_t size);
+cl_mem			rt_cl_malloc_write(t_cl_info *info, size_t size, void *ptr);
 
 /*
 ** Writing data to devices' memory.
