@@ -105,7 +105,7 @@ void		rt_cl_init(t_cl_info *info)
 				&info->num_platforms));
 	check_error(clGetDeviceIDs(
 				info->platform,
-				CL_DEVICE_TYPE_GPU,
+				CL_DEVICE_TYPE_CPU,
 				1, &info->device_id,
 				&info->num_devices));
 	status = CL_SUCCESS;
@@ -135,8 +135,8 @@ cl_mem		rt_cl_malloc_read(t_cl_info *info, size_t size)
 				size,
 				NULL,
 				&status);
+    check_error(status);
 	return (ret);
-	check_error(status);
 }
 
 cl_mem		rt_cl_malloc_write(t_cl_info *info, size_t size, void *ptr)
@@ -147,12 +147,12 @@ cl_mem		rt_cl_malloc_write(t_cl_info *info, size_t size, void *ptr)
 	cl_mem		ret;
 	ret = clCreateBuffer(
 				info->context,
-				CL_MEM_HOST_PTR,
+				CL_MEM_COPY_HOST_PTR,
 				size,
 				ptr,
 				&status);
+    check_error(status);
 	return (ret);
-	check_error(status);
 }
 
 cl_int		rt_cl_host_to_device(
@@ -302,12 +302,12 @@ void		rt_cl_drop_arg(t_kernel *kernel)
 	kernel->args = 0;
 }
 
-void		rt_cl_push_task(t_kernel *kernel, size_t size)
+void		rt_cl_push_task(t_kernel *kernel, size_t *size)
 {
 	cl_int		status;
 
 	status = clEnqueueNDRangeKernel(kernel->info->command_queue,
 			kernel->kernel, 1,
-			NULL, &size, NULL, 0, NULL, NULL);
+			NULL, size, NULL, 0, NULL, NULL);
 	check_error(status);
 }

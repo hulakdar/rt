@@ -38,8 +38,8 @@ void		ft_get_scene(int i, t_gra *o)
 
 void		ft_init(t_gra *o)
 {
-	o->cam_def.origin = (t_dpoint){0, 0, -100};
-	o->cam_def.dir = (t_dpoint){0, 0, 1};
+	o->cam_def.origin = (t_vec){0, 0, 0.5};
+	o->cam_def.dir = (t_vec){0, 0, 1};
 	o->cam_mod.origin = o->cam_def.origin;
 	o->cam_mod.dir = o->cam_def.dir;
 	o->cam_mod.screen.z = o->cam_mod.vport_dist;
@@ -60,7 +60,7 @@ void		ft_error(char *s)
 
 int			ft_exit_x(void)
 {
-	exit(1);
+	exit(0);
 }
 
 // __kernel void	ft_tracer(t_obj *obj, t_li *li, global int *address, t_cam cam)
@@ -79,27 +79,26 @@ int	main(void)
     rt_cl_init(&info);
     rt_cl_compile(&info, "../kernel.cl");
     t_kernel kernel = rt_cl_create_kernel(&info, "ft_tracer");
-    size = 400 * 400;
-    ft_get_scene(1, &o);
     ft_init(&o);
+	ft_get_scene(2, &o);
 	cam.cam_mod = o.cam_mod;
 	cam.angles = (t_dpoint){0, 0, 0};
 	cl_mem buf = rt_cl_malloc_read(&info, 400 * 400 * sizeof(int));
 	cl_mem objects = rt_cl_malloc_write(&info, (o.objs + 1) * sizeof(t_obj), o.obj);
 	cl_mem lights = rt_cl_malloc_write(&info, (o.ligs + 1) * sizeof(t_li), o.lights);
-	cl_mem cam_host = rt_cl_malloc_write(&info, sizeof(t_cam), &cam);
+	cl_mem camera = rt_cl_malloc_write(&info, sizeof(t_cam), &cam);
+    size = 400 * 400;
+	rt_cl_push_arg(&kernel, &objects, sizeof(cl_mem));
+    rt_cl_push_arg(&kernel, &lights, sizeof(cl_mem));
+	rt_cl_push_arg(&kernel, &buf, sizeof(cl_mem));
+	rt_cl_push_arg(&kernel, &camera, sizeof(cl_mem));
     clEnqueueNDRangeKernel(info.command_queue,
                            kernel.kernel, 1,
                            NULL, &size, NULL, 0, NULL, NULL);
-	rt_cl_join(&info);
 	mlx = mlx_init();
 	window = mlx_new_window(mlx, 400, 400, "IT WORKED?!");
 	image = mlx_new_image(mlx, 400, 400);
 	data = (int *)mlx_get_data_addr(image, &dummy, &dummy, &dummy);
-	rt_cl_push_arg(&kernel, &objects, sizeof(cl_mem));
-	rt_cl_push_arg(&kernel, &lights, sizeof(cl_mem));
-	rt_cl_push_arg(&kernel, &buf, sizeof(cl_mem));
-	rt_cl_push_arg(&kernel, &cam_host, sizeof(cl_mem));
     rt_cl_device_to_host(&info, buf, data, 400 * 400 * sizeof(int));
     rt_cl_join(&info);
     rt_cl_free(&info);
