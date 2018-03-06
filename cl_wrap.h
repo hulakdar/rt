@@ -109,5 +109,5 @@ void			rt_cl_drop_arg(t_kernel *kernel);
 /*
 ** Start working with "size" number of threads.
 */
-void			rt_cl_push_task(t_kernel *kernel, size_t size);
+void			rt_cl_push_task(t_kernel *kernel, size_t *size);
 #endif
