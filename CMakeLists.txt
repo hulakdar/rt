@@ -3,7 +3,7 @@ project(RT)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror -Wextra")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
 
 include_directories(include minilibx)
 link_directories(minilibx)
@@ -14,6 +14,7 @@ add_executable(RT
         cl_wrapper.c
         scene.c
         scenes.c
+        hooks.c
         create.c
         main.c)
 

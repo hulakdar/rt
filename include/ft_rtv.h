@@ -13,7 +13,6 @@
 #ifndef FT_RT_H
 # define FT_RT_H
 
-# include "../libft/libft.h"
 # include <fcntl.h>
 # include </usr/local/include/mlx.h>
 # include <math.h>
@@ -48,48 +47,48 @@ enum 		e_obj_type {
 	cone
 };
 
+
+
+//dsfae4rse
 typedef struct		s_dpoint
 {
-	double			x;
-	double			y;
-	double			z;
+	cl_double			x;
+	cl_double			y;
+	cl_double			z;
 }					t_dpoint;
-typedef	t_dpoint    t_vec;
-union				u_color
-{
-	unsigned int	color;
-	unsigned char	channels[4];
-};
-
+typedef	cl_double3    t_vec;
 typedef struct		s_camera
 {
 	t_vec			origin;
 	t_vec			dir;
-	t_dpoint		screen;
-	double			vport_dist;
+	t_vec			screen;
+	cl_double		vport_dist;
 }					t_camera;
+
 
 typedef struct		s_obj
 {
 	short			type;
-	double			rad;
+	cl_double		rad;
 	t_vec			rot;
 	t_vec			pos;
-	union u_color	col;
-	double			alpha;
+	cl_uchar4		col;
+	cl_double		alpha;
 }					t_obj;
 
 typedef struct		s_li
 {
 	short			type;
 	t_vec			pos;
-	double			inten;
-	union u_color	col;
+	cl_double		inten;
+	cl_uchar4		col;
 }					t_li;
 typedef struct		s_cam
 {
 	t_camera		cam_mod;
-	t_dpoint		angles;
+	t_vec			angles;
+	cl_uint 		win_h;
+	cl_uint 		win_w;
 }					t_cam;
 typedef struct		s_ray
 {
@@ -102,39 +101,43 @@ typedef struct		s_gra
 	void			*mlx;
 	void			*win;
 	void			*img;
-	char			*addr;
-	t_cl_info 		cl;
+	int				*addr;
+	t_cl_info 		*cl;
+	t_kernel		*kernel;
+	size_t	 		size;
+	cl_mem			cam_mem;
+	cl_mem			buf;
 	int				bpp;
 	int				sizeline;
 	int				endian;
 	t_camera		cam_def;
 	t_camera		cam_mod;
+	t_cam			*cam;
 	int				objs;
 	t_obj			*obj;
 	short			ligs;
 	t_li			*lights;
 	t_ray			ray;
-	double			t0;
-	double			t1;
+	cl_double			t0;
+	cl_double			t1;
 	t_ray			lp;
-	double			clo;
+	cl_double			clo;
 	int				clo_col;
-	double			env_li;
-	double			light;
-	double			blik;
-	union u_color	blik_col;
+	cl_double			env_li;
+	cl_double			light;
+	cl_double			blik;
+	cl_uchar4	blik_col;
 	t_vec			p;
-	double			step;
+	cl_double			step;
 	int				i;
 	float			an_x;
 	float			an_y;
 	float			an_z;
-	double			alp;
-	double			bet;
-	double			gam;
+	cl_double			alp;
+	cl_double			bet;
+	cl_double			gam;
 }					t_gra;
 
-void				ft_init(t_gra *o);
 int					ft_exit_x(void);
 void				ft_draw(t_gra *o);
 void				ft_error(char *s);
@@ -143,13 +146,13 @@ t_gra				*key_hook_rot(t_gra *o, int keycode);
 t_gra				*key_hook_def(t_gra *o);
 
 void				ft_scene_init(t_gra *o);
-void				ft_cr_sphere(t_obj *s, union u_color col,
-									t_vec pos, double rad);
-void				ft_cr_plane(t_obj *s, union u_color col,
+void				ft_cr_sphere(t_obj *s, cl_uchar4 col,
+									t_vec pos, cl_double rad);
+void				ft_cr_plane(t_obj *s, cl_uchar4 col,
 								t_vec pos, t_vec rot);
-void				ft_cr_cyl(t_obj *s, union u_color col,
+void				ft_cr_cyl(t_obj *s, cl_uchar4 col,
 								t_vec pos, t_vec rot);
-void				ft_cr_cone(t_obj *s, union u_color col,
+void				ft_cr_cone(t_obj *s, cl_uchar4 col,
 								t_vec pos, t_vec rot);
 void				ft_scene1(t_gra *o);
 void				ft_scene2(t_gra *o);
@@ -160,30 +163,4 @@ void				ft_scene50(t_gra *o);
 void				ft_scene6(t_gra *o);
 void				ft_scene7(t_gra *o);
 void				ft_scene8(t_gra *o);
-union u_color		ft_base_color(int r, int b, int g, int a);
-
-void				ft_tracer(t_gra o, int x, int y, int i);
-void				ft_get_ray(t_gra *o, int x, int y);
-void				ft_rotation(t_gra *o);
-t_vec				ft_rot_matrix(double alpha, double beta,
-									double gamma, t_vec r);
-void				ft_checklight(t_gra *o, int i, int k);
-void				ft_lightening(t_gra *o, int i);
-void				ft_find_clo(t_gra *o, int i);
-double				ft_shadow(t_gra *o, int k, t_ray ray);
-
-t_vec				ft_vecnormal(t_vec *v);
-double				ft_vecdot(t_vec *a, t_vec *b);
-t_vec				ft_vecscale(t_vec *a, double n);
-t_vec				ft_vecminus(t_vec *i, t_vec *j);
-double				ft_magnitude(t_vec *a);
-
-t_vec				ft_normal(t_gra *o, int i, t_vec p);
-void				ft_sphere(t_gra *o, int i, t_ray ray);
-void				ft_cylinder(t_gra *o, int i, t_ray ray);
-void				ft_plane(t_gra *o, int i, t_ray ray);
-void				ft_cone(t_gra *o, int i, t_ray ray);
-
-
-void        ft_kernel_init(t_cl_info *cl);
 #endif
