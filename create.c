@@ -12,21 +12,7 @@
 
 #include "../include/ft_rtv.h"
 
-union u_color		ft_base_color(int r, int b, int g, int a)
-{
-	union u_color	col;
-
-	if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 ||
-		b > 255 || a < 0 || a > 255)
-		ft_error(MES5);
-	col.channels[2] = r;
-	col.channels[1] = b;
-	col.channels[0] = g;
-	col.channels[3] = a;
-	return (col);
-}
-
-void				ft_cr_sphere(t_obj *s, union u_color col,
+void				ft_cr_sphere(t_obj *s, cl_uchar4 col,
 								t_vec pos, double rad)
 {
 	s->type = sphere;
@@ -35,7 +21,7 @@ void				ft_cr_sphere(t_obj *s, union u_color col,
 	s->rad = rad;
 }
 
-void				ft_cr_cyl(t_obj *s, union u_color col,
+void				ft_cr_cyl(t_obj *s, cl_uchar4 col,
 								t_vec pos, t_vec rot)
 {
 	s->type = cylinder;
@@ -45,7 +31,7 @@ void				ft_cr_cyl(t_obj *s, union u_color col,
 	s->rad = 4;
 }
 
-void				ft_cr_plane(t_obj *s, union u_color col,
+void				ft_cr_plane(t_obj *s, cl_uchar4 col,
 								t_vec pos, t_vec rot)
 {
 	s->type = plane;
@@ -54,7 +40,7 @@ void				ft_cr_plane(t_obj *s, union u_color col,
 	s->rot = rot;
 }
 
-void				ft_cr_cone(t_obj *s, union u_color col,
+void				ft_cr_cone(t_obj *s, cl_uchar4 col,
 								t_vec pos, t_vec rot)
 {
 	s->type = cone;

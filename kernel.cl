@@ -13,6 +13,8 @@ typedef struct		s_cam
 {
 	t_camera		cam_mod;
 	double3			angles;
+	unsigned 		win_h;
+	unsigned 		win_w;
 }					t_cam;
 typedef struct		s_obj
 {
@@ -30,10 +32,8 @@ typedef struct		s_li
 	double			inten;
 	uchar4	        col;
 }					t_li;
-#define WIN_H 400
-#define WIN_W 400
 
-
+#define syntax
 
 static void ft_roots(double2 *t, double a, double b, double c)
 {
@@ -142,19 +142,20 @@ static double				ft_shadow(global t_obj *me, global t_obj *obj, double3 *ray)
 	ray[1] = normalize(ray[1]);
 	while (obj->type)
 	{
-		t = (double2)(0, 0);
-		if (me == obj)
-			continue;
-		else if (obj->type == 3)
-			ft_sphere(obj, ray, &t);
-		else if (obj->type == 2)
-			ft_plane(obj, ray, &t);
-		else if (obj->type == 4)
-			ft_cylinder(obj, ray, &t);
-		else if (obj->type == 5)
-			ft_cone(obj, ray, &t);
-		if (t.x > 0.000000000001 && t.x < root)
-			ret += t.x;
+		if (me != obj)
+        {
+            t = (double2)(0, 0);
+            if (obj->type == 3)
+                ft_sphere(obj, ray, &t);
+            else if (obj->type == 2)
+            	ft_plane(obj, ray, &t);
+            else if (obj->type == 4)
+            	ft_cylinder(obj, ray, &t);
+            else if (obj->type == 5)
+                ft_cone(obj, ray, &t);
+            if (t.x > 0.000000000001 && t.x < root)
+                ret += t.x;
+        }
 		obj++;
 	}
 	return (ret);
@@ -213,40 +214,39 @@ static double3	ft_rotation(double3 dir, double3 angles)
 
 static void		ft_get_ray(t_cam cam, int x, int y, double3 *ray)
 {
-	double3 screen = (double3)(x - WIN_W / 2.0, (WIN_H - y) - WIN_H / 2.0, 1.0);
-	double3 vport = (double3)(0.5 / WIN_W, 0.5 / WIN_H, 1.0);
+	double3 screen = (double3)(x - cam.win_w / 2.0, (cam.win_h - y) - cam.win_h / 2.0, 1.0);
+	double3 vport = (double3)(0.5 / cam.win_w, 0.5 / cam.win_h, 1.0);
 	ray[0] = cam.cam_mod.origin;
 	ray[1] = screen * vport - ray[0];
 	ray[1] = normalize(ray[1]);
-    /*
 	ray[1] = ft_rotation(ray[1], cam.angles);
-     */
 }
 
 __kernel void		ft_tracer(global t_obj *obj, global t_li *li,global int *address, global t_cam *cam_p)
 {
-    int         x = get_global_id(0) % WIN_W;
-    int			y = get_global_id(0) / WIN_W;
-    uchar4      clo_col = (uchar4){0,0,0,0};
-    double3     ray[2] = {(double3)(0,0,0),(double3)(0,0,0)};
-    double2     t = (double2)(-1,-1);
+    t_cam 			cam = *cam_p;
 	global t_obj	*start = obj;
-    double      clo = INFINITY;
-    double      light = 0.2;
-    double      blik = 0.0;
-    double		cosi;
-    double3		h;
-    double3		l;
-    double3     lp[2];
-	t_cam 		cam = *cam_p;
+    int         	x = get_global_id(0) % cam.win_w;
+    int				y = get_global_id(0) / cam.win_w;
+    uchar4      	clo_col = (uchar4){0,0,0,0};
+    double3     	ray[2] = {(double3)(0,0,0),(double3)(0,0,0)};
+    double2     	t = (double2)(-1,-1);
+    double      	clo = INFINITY;
+    double      	light = 0.2;
+    double      	blik = 0.0;
+    double			cosi;
+    double3			h;
+    double3			l;
+    double3     	lp[2];
+
 
     ft_get_ray(cam, x, y, &ray[0]);
-	if (x == 200 && y == 200)
-        printf("Ray: %f %f %f %d %f %x\n", obj->pos.x, obj->pos.y, obj->pos.z, obj->type, obj->rad, obj->col);
     /*
-	t_obj object = {3, 2.0, {0,0,0},{0,0,40},(uchar4)(214,48,255,0),0.0};
-	t_obj *obj = &object;
-	t_li lili = {1,(t_vec)(0,10,10),1.0,(uchar4)(255,255,255,0)};
+    if (x == 200 && y == 200)
+        printf("Ray: %f %f %f %d %f %x\n", obj->pos.x, obj->pos.y, obj->pos.z, obj->type, obj->rad, obj->col);
+    t_obj object = {3, 2.0, {0,0,0},{0,0,40},(uchar4)(214,48,255,0),0.0};
+    t_obj *obj = &object;
+    t_li lili = {1,(t_vec)(0,10,10),1.0,(uchar4)(255,255,255,0)};
     t_li *li = &lili;
      */
     while (obj->type != 0)
@@ -269,7 +269,7 @@ __kernel void		ft_tracer(global t_obj *obj, global t_li *li,global int *address,
                 ;
             else
                 t.x = (t.x < t.y) ? t.x : t.y;
-            if (clo == INFINITY || clo > t.x)
+            if (clo > t.x)
             {
                 if (t.x > 0.0 || t.y > 0.0)
                 {
@@ -317,6 +317,6 @@ __kernel void		ft_tracer(global t_obj *obj, global t_li *li,global int *address,
         }
         obj++;
     }
-    address[x + y * WIN_W] = *(int *)&clo_col;
+    address[x + y * cam.win_w] = upsample(upsample(clo_col.w,clo_col.x), upsample(clo_col.y,clo_col.z));
 }
 
