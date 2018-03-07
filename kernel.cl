@@ -226,6 +226,7 @@ __kernel void		ft_tracer(global t_obj *obj, global t_li *li,global int *address,
 {
     t_cam 			cam = *cam_p;
 	global t_obj	*start = obj;
+	global t_obj	*current = obj;
     int         	x = get_global_id(0) % cam.win_w;
     int				y = get_global_id(0) / cam.win_w;
     uchar4      	clo_col = (uchar4){0,0,0,0};
@@ -275,48 +276,50 @@ __kernel void		ft_tracer(global t_obj *obj, global t_li *li,global int *address,
                 {
                     clo = t.x;
                     clo_col = obj->col;
-                    double3 p = ray[1] * clo + cam.cam_mod.origin;
-                    lp[0] = p;
-                    uchar4 blik_col = {0, 0, 0, 0};
-                    double3 pc = ft_normal(&ray[0], obj, p, clo);
-                    double3 v = cam.cam_mod.origin - p;
-                    v = normalize(v);
-                    while (li->type != 2)
-                    {
-                        lp[1] = li->pos - p;
-                        if ((ft_shadow(obj, start, lp)) == 0)
-                        {
-                            l = normalize(lp[1]);
-                            h = l + v;
-                            h = normalize(h);
-                            cosi = dot(pc, l);
-                            cosi = cosi < 0 ? 0 : cosi;
-                            light += cosi * li->inten;
-                            double dotsq = dot(h, pc) * dot(h, pc);
-                            blik = exp(-250 * (1.0 - dotsq) / dotsq);
-                            blik_col.x = (blik_col.x + li->col.x * blik * li->inten > 255) ? 255 :
-                                         blik_col.x + li->col.x * blik * li->inten;
-                            blik_col.y = (blik_col.y + li->col.y * blik * li->inten > 255) ? 255 :
-                                         blik_col.y + li->col.y * blik * li->inten;
-                            blik_col.z = (blik_col.z + li->col.z * blik * li->inten > 255) ? 255 :
-                                         blik_col.z + li->col.z * blik * li->inten;
-                        }
-                        li++;
-                    }
-                    clo_col.x = ((clo_col.x * light +
-                                  blik_col.x) > 255) ? 255 :
-                                clo_col.x * light + blik_col.x;
-                    clo_col.y = ((clo_col.y * light +
-                                  blik_col.y) > 255) ? 255 :
-                                clo_col.y * light + blik_col.y;
-                    clo_col.z = ((clo_col.z * light +
-                                  blik_col.z) > 255) ? 255 :
-                                clo_col.z * light + blik_col.z;
+					current = obj;
+
                 }
             }
         }
         obj++;
     }
+	double3 p = ray[1] * clo + cam.cam_mod.origin;
+	lp[0] = p;
+	uchar4 blik_col = {0, 0, 0, 0};
+	double3 pc = ft_normal(&ray[0], current, p, clo);
+	double3 v = cam.cam_mod.origin - p;
+	v = normalize(v);
+//	while (li->type != 2)
+//	{
+		lp[1] = li->pos - p;
+		if ((ft_shadow(current, start, lp)) == 0)
+		{
+			l = normalize(lp[1]);
+			h = l + v;
+			h = normalize(h);
+			cosi = dot(pc, l);
+			cosi = cosi < 0 ? 0 : cosi;
+			light += cosi * li->inten;
+			double dotsq = dot(h, pc) * dot(h, pc);
+			blik = exp(-250 * (1.0 - dotsq) / dotsq);
+			blik_col.x = (blik_col.x + li->col.x * blik * li->inten > 255) ? 255 :
+						 blik_col.x + li->col.x * blik * li->inten;
+			blik_col.y = (blik_col.y + li->col.y * blik * li->inten > 255) ? 255 :
+						 blik_col.y + li->col.y * blik * li->inten;
+			blik_col.z = (blik_col.z + li->col.z * blik * li->inten > 255) ? 255 :
+						 blik_col.z + li->col.z * blik * li->inten;
+		}
+//		li++;
+//	}
+	clo_col.x = ((clo_col.x * light +
+				  blik_col.x) > 255) ? 255 :
+				clo_col.x * light + blik_col.x;
+	clo_col.y = ((clo_col.y * light +
+				  blik_col.y) > 255) ? 255 :
+				clo_col.y * light + blik_col.y;
+	clo_col.z = ((clo_col.z * light +
+				  blik_col.z) > 255) ? 255 :
+				clo_col.z * light + blik_col.z;
     address[x + y * cam.win_w] = upsample(upsample(clo_col.w,clo_col.x), upsample(clo_col.y,clo_col.z));
 }
 

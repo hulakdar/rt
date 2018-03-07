@@ -25,7 +25,7 @@ void			ft_scene1(t_gra *o)
 	o->objs = 1;
 	o->ligs = 3;
 	ft_scene_init(o);
-	ft_cr_sphere(&o->obj[0], (cl_uchar4){0, 255, 255, 0}, (t_vec){0, 0, 90}, 25);
+	ft_cr_sphere(&o->obj[0], (cl_uchar4){0, 255, 255, 0}, (t_vec){0, 0, 190}, 25);
 	o->obj[1].type = end_obj;
 	o->lights[0].type = ambient;
 	o->lights[0].col = (cl_uchar4){255, 255, 255, 0};
@@ -75,7 +75,7 @@ void			ft_scene3(t_gra *o)
 	o->ligs = 2;
 	ft_scene_init(o);
 	ft_cr_cone(&o->obj[0], (cl_uchar4){255, 255, 255, 0},
-		(t_vec){0, 0, 0}, (t_vec){0, 1, 0});
+		(t_vec){10, 0, 100}, (t_vec){0, 1, 0});
 	o->obj[1].type = end_obj;
 	o->lights[0].type = ambient;
 	o->lights[0].col = (cl_uchar4){255, 255, 255, 0};
@@ -94,7 +94,7 @@ void			ft_scene4(t_gra *o)
 	o->ligs = 3;
 	ft_scene_init(o);
 	ft_cr_cyl(&o->obj[0], (cl_uchar4){255, 235, 135, 0},
-		(t_vec){0, 0, 0}, (t_vec){0, 1, 0});
+		(t_vec){10, 0, 70}, (t_vec){0, 1, 0});
 	o->obj[1].type = end_obj;
 	o->lights[0].type = ambient;
 	o->lights[0].col = (cl_uchar4){255, 255, 255, 0};
@@ -110,3 +110,4 @@ void			ft_scene4(t_gra *o)
 	o->lights[2].inten = 0.4;
 	o->lights[3].type = end_light;
 }
+

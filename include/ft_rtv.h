@@ -47,16 +47,15 @@ enum 		e_obj_type {
 	cone
 };
 
-
-
-//dsfae4rse
 typedef struct		s_dpoint
 {
 	cl_double			x;
 	cl_double			y;
 	cl_double			z;
 }					t_dpoint;
+
 typedef	cl_double3    t_vec;
+
 typedef struct		s_camera
 {
 	t_vec			origin;
@@ -90,11 +89,6 @@ typedef struct		s_cam
 	cl_uint 		win_h;
 	cl_uint 		win_w;
 }					t_cam;
-typedef struct		s_ray
-{
-	t_dpoint		start;
-	t_vec			dir;
-}					t_ray;
 
 typedef struct		s_gra
 {
@@ -117,25 +111,14 @@ typedef struct		s_gra
 	t_obj			*obj;
 	short			ligs;
 	t_li			*lights;
-	t_ray			ray;
-	cl_double			t0;
-	cl_double			t1;
-	t_ray			lp;
-	cl_double			clo;
-	int				clo_col;
-	cl_double			env_li;
-	cl_double			light;
-	cl_double			blik;
-	cl_uchar4	blik_col;
-	t_vec			p;
-	cl_double			step;
-	int				i;
+	cl_double		env_li;
+	cl_double		step;
 	float			an_x;
 	float			an_y;
 	float			an_z;
-	cl_double			alp;
-	cl_double			bet;
-	cl_double			gam;
+	cl_double		alp;
+	cl_double		bet;
+	cl_double		gam;
 }					t_gra;
 
 int					ft_exit_x(void);
