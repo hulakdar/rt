@@ -214,10 +214,10 @@ static double3	ft_rotation(double3 dir, double3 angles)
 
 static void		ft_get_ray(t_cam cam, int x, int y, double3 *ray)
 {
-	double3 screen = (double3)(x - cam.win_w / 2.0, (cam.win_h - y) - cam.win_h / 2.0, 1.0);
-	double3 vport = (double3)(0.5 / cam.win_w, 0.5 / cam.win_h, 1.0);
+	double3 screen = (double3)(((x + 0.5) / cam.win_w) * 2 - 1, 1 - 2 * ((y + 0.5) / cam.win_h), 1.0);
+	double3 vport = (double3)(cam.win_w / cam.win_h, 1.0 , 1.0);
 	ray[0] = cam.cam_mod.origin;
-	ray[1] = screen * vport - ray[0];
+	ray[1] = screen * vport;
 	ray[1] = normalize(ray[1]);
 	ray[1] = ft_rotation(ray[1], cam.angles);
 }
@@ -226,7 +226,7 @@ __kernel void		ft_tracer(global t_obj *obj, global t_li *li,global int *address,
 {
     t_cam 			cam = *cam_p;
 	global t_obj	*start = obj;
-	global t_obj	*current = obj;
+	global t_obj	*current = 0;
     int         	x = get_global_id(0) % cam.win_w;
     int				y = get_global_id(0) / cam.win_w;
     uchar4      	clo_col = (uchar4){0,0,0,0};
@@ -239,7 +239,6 @@ __kernel void		ft_tracer(global t_obj *obj, global t_li *li,global int *address,
     double3			h;
     double3			l;
     double3     	lp[2];
-
 
     ft_get_ray(cam, x, y, &ray[0]);
     /*
@@ -283,43 +282,47 @@ __kernel void		ft_tracer(global t_obj *obj, global t_li *li,global int *address,
         }
         obj++;
     }
-	double3 p = ray[1] * clo + cam.cam_mod.origin;
-	lp[0] = p;
-	uchar4 blik_col = {0, 0, 0, 0};
-	double3 pc = ft_normal(&ray[0], current, p, clo);
-	double3 v = cam.cam_mod.origin - p;
-	v = normalize(v);
-//	while (li->type != 2)
-//	{
-		lp[1] = li->pos - p;
-		if ((ft_shadow(current, start, lp)) == 0)
-		{
-			l = normalize(lp[1]);
-			h = l + v;
-			h = normalize(h);
-			cosi = dot(pc, l);
-			cosi = cosi < 0 ? 0 : cosi;
-			light += cosi * li->inten;
-			double dotsq = dot(h, pc) * dot(h, pc);
-			blik = exp(-250 * (1.0 - dotsq) / dotsq);
-			blik_col.x = (blik_col.x + li->col.x * blik * li->inten > 255) ? 255 :
-						 blik_col.x + li->col.x * blik * li->inten;
-			blik_col.y = (blik_col.y + li->col.y * blik * li->inten > 255) ? 255 :
-						 blik_col.y + li->col.y * blik * li->inten;
-			blik_col.z = (blik_col.z + li->col.z * blik * li->inten > 255) ? 255 :
-						 blik_col.z + li->col.z * blik * li->inten;
-		}
-//		li++;
-//	}
-	clo_col.x = ((clo_col.x * light +
-				  blik_col.x) > 255) ? 255 :
-				clo_col.x * light + blik_col.x;
-	clo_col.y = ((clo_col.y * light +
-				  blik_col.y) > 255) ? 255 :
-				clo_col.y * light + blik_col.y;
-	clo_col.z = ((clo_col.z * light +
-				  blik_col.z) > 255) ? 255 :
-				clo_col.z * light + blik_col.z;
+    if (current)
+    {
+        double3 p = ray[1] * clo + cam.cam_mod.origin;
+        lp[0] = p;
+        uchar4 blik_col = {0, 0, 0, 0};
+        double3 pc = ft_normal(&ray[0], current, p, clo);
+        double3 v = cam.cam_mod.origin - p;
+        v = normalize(v);
+        while (li->type != 2)
+        {
+            lp[1] = li->pos - p;
+            if ((ft_shadow(current, start, lp)) == 0)
+            {
+                l = normalize(lp[1]);
+                h = l + v;
+                h = normalize(h);
+                cosi = dot(pc, l);
+                cosi = cosi < 0 ? 0 : cosi;
+                light += cosi * li->inten;
+                double dotsq = dot(h, pc) * dot(h, pc);
+                blik = exp(-250 * (1.0 - dotsq) / dotsq);
+                blik_col.x = (blik_col.x + li->col.x * blik * li->inten > 255) ? 255 :
+                             blik_col.x + li->col.x * blik * li->inten;
+                blik_col.y = (blik_col.y + li->col.y * blik * li->inten > 255) ? 255 :
+                             blik_col.y + li->col.y * blik * li->inten;
+                blik_col.z = (blik_col.z + li->col.z * blik * li->inten > 255) ? 255 :
+                             blik_col.z + li->col.z * blik * li->inten;
+            }
+        	li++;
+        }
+        clo_col.x = ((clo_col.x * light +
+                      blik_col.x) > 255) ? 255 :
+                    clo_col.x * light + blik_col.x;
+        clo_col.y = ((clo_col.y * light +
+                      blik_col.y) > 255) ? 255 :
+                    clo_col.y * light + blik_col.y;
+        clo_col.z = ((clo_col.z * light +
+                      blik_col.z) > 255) ? 255 :
+                    clo_col.z * light + blik_col.z;
+
+    }
     address[x + y * cam.win_w] = upsample(upsample(clo_col.w,clo_col.x), upsample(clo_col.y,clo_col.z));
 }
 

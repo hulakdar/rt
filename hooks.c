@@ -10,7 +10,31 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <OpenCL/opencl.h>
 #include "../include/ft_rtv.h"
+
+static cl_double3			ft_rot_matrix(double alpha, double beta, double gamma, cl_double3 r)
+{
+	double		mat[3][3];
+	cl_double3	ret;
+
+	mat[0][0] = cos(beta) * cos(gamma);
+	mat[1][0] = cos(gamma) * sin(alpha) * sin(beta) - cos(alpha) * sin(gamma);
+	mat[2][0] = cos(alpha) * cos(gamma) * sin(beta) + sin(alpha) * sin(gamma);
+	mat[0][1] = cos(beta) * sin(gamma);
+	mat[1][1] = cos(alpha) * cos(gamma) + sin(alpha) * sin(beta) * sin(gamma);
+	mat[2][1] = -cos(gamma) * sin(alpha) + cos(alpha) * sin(beta) * sin(gamma);
+	mat[0][2] = -sin(beta);
+	mat[1][2] = cos(beta) * sin(alpha);
+	mat[2][2] = cos(alpha) * cos(beta);
+	ret.x = (mat[0][0] * r.x) + (mat[1][0] * r.y) +
+			(mat[2][0] * r.z);
+	ret.y = (mat[0][1] * r.x) + (mat[1][1] * r.y) +
+			(mat[2][1] * r.z);
+	ret.z = (mat[0][2] * r.x) + (mat[1][2] * r.y) +
+			(mat[2][2] * r.z);
+	return (ret);
+}
 
 void	ft_draw(t_gra *o)
 {
@@ -33,14 +57,20 @@ t_gra			*key_hook_cam(t_gra *o, int keycode)
 		o->cam->angles.x += o->step;
 	else if (keycode == 13)
 		o->cam->angles.x -= o->step;
-	else if (keycode == 123)
-		o->cam->cam_mod.origin.s0 += 0.1;
-	else if (keycode == 124)
-		o->cam->cam_mod.origin.s0 -= 0.1;
-	else if (keycode == 126)
-		o->cam->cam_mod.origin.s2 += 10;
-	else if (keycode == 125)
-		o->cam->cam_mod.origin.s2 -= 10;
+	else if (keycode == ARROW_DOWN)
+	{
+		o->cam->cam_mod.origin.s0 -= o->cam->cam_mod.dir.s0;
+		o->cam->cam_mod.origin.s1 -= o->cam->cam_mod.dir.s1;
+		o->cam->cam_mod.origin.s2 -= o->cam->cam_mod.dir.s2;
+	}
+	else if (keycode == ARROW_UP)
+	{
+		o->cam->cam_mod.origin.s0 += o->cam->cam_mod.dir.s0;
+		o->cam->cam_mod.origin.s1 += o->cam->cam_mod.dir.s1;
+		o->cam->cam_mod.origin.s2 += o->cam->cam_mod.dir.s2;
+	}
+    if (keycode >= 0 && keycode <= 13)
+        o->cam->cam_mod.dir = ft_rot_matrix(o->cam->angles.x, o->cam->angles.y, o->cam->angles.z, o->cam_def.dir);
 	return (o);
 }
 
@@ -50,9 +80,9 @@ t_gra			*key_hook_def(t_gra *o)
 	o->cam->cam_mod.origin.s1 = o->cam_def.origin.s1;
 	o->cam->cam_mod.origin.s2 = o->cam_def.origin.s2;
 	o->cam->cam_mod.dir = o->cam_def.dir;
-	o->an_x = 0;
-	o->an_y = 0;
-	o->an_z = 0;
+	o->cam->angles.s0 = 0;
+	o->cam->angles.s1 = 0;
+	o->cam->angles.s2 = 0;
 	return (o);
 }
 

@@ -21,7 +21,8 @@
 # include <pthread.h>
 
 # include <stdio.h>
-#include "cl_wrap.h"
+# include "cl_wrap.h"
+# include "mac_key.h"
 
 # define MES1 "Usage : ./RTv1 scene_number(1-8)"
 # define MES2 "File opening failed"
@@ -77,7 +78,7 @@ typedef struct		s_obj
 
 typedef struct		s_li
 {
-	short			type;
+	cl_char			type;
 	t_vec			pos;
 	cl_double		inten;
 	cl_uchar4		col;
