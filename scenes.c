@@ -35,6 +35,7 @@ void			ft_scene8(t_gra *o)
 	o->lights[2].col = (cl_uchar4){{255, 255, 255, 0}};
 	o->lights[2].pos = (t_vec){{0, 40, -50}};
 	o->lights[2].inten = 0.6;
+    o->lights[3].type = end_light;
 }
 
 
@@ -64,6 +65,7 @@ void			ft_scene50(t_gra *o)
 	o->lights[1].col = (cl_uchar4){255, 255, 255, 0};
 	o->lights[1].pos = (t_vec){-40, 18, -50};
 	o->lights[1].inten = 0.6;
+    o->lights[2].type = end_light;
 }
 
 void			ft_scene5(t_gra *o)
@@ -117,6 +119,7 @@ void			ft_scene6(t_gra *o)
 	o->lights[2].col = (cl_uchar4){255, 255, 255, 0};
 	o->lights[2].pos = (t_vec){10, 10, 0};
 	o->lights[2].inten = 0.4;
+    o->lights[3].type = end_light;
 }
 
 void			ft_scene7(t_gra *o)
@@ -146,4 +149,5 @@ void			ft_scene7(t_gra *o)
 	o->lights[1].col = (cl_uchar4){255, 255, 255, 0};
 	o->lights[1].pos = (t_vec){-90, 212, -70};
 	o->lights[1].inten = 0.6;
+    o->lights[2].type = end_light;
 }

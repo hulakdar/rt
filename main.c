@@ -69,7 +69,7 @@ static void		ft_init(t_gra *o, t_cl_info *info)
 	o->buf = buf;
 	rt_cl_device_to_host(info, buf, o->addr, o->size * sizeof(int));
 	mlx_hook(o->win, 17, 1L << 17, ft_exit_x, 0);
-	mlx_key_hook(o->win, key_hook, o);
+	mlx_hook(o->win, 2, 1L, key_hook, o);
     rt_cl_join(info);
 	mlx_put_image_to_window(o->mlx, o->win, o->img, 0, 0);
 }
@@ -100,11 +100,11 @@ int	main(void)
 	o.kernel = &kernel;
 	cam.cam_mod = o.cam_mod;
 	cam.angles = (t_vec){{0, 0, 0}};
-	cam.win_w = 1300;
-	cam.win_h = 1300;
+	cam.win_w = 1000;
+	cam.win_h = 1000;
 	o.cam = &cam;
 	o.size = cam.win_h * cam.win_w;
-	ft_get_scene(2, &o);
+	ft_get_scene(5, &o);
     ft_init(&o, &info);
     mlx_loop(o.mlx);
 }
