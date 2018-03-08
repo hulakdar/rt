@@ -26,6 +26,8 @@ t_stringview	ft_strsplit_inplace(char *str, char delim)
 		ft_vectorpushback(&vec, &str);
 		while (*str && *str != delim)
 			str++;
+		if (!*str)
+			break;
 		*str = 0;
 		str++;
 		while (*str && *str == delim)
