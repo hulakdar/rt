@@ -222,6 +222,27 @@ static void		ft_get_ray(t_cam cam, int x, int y, double3 *ray)
 	ray[1] = ft_rotation(ray[1], cam.angles);
 }
 
+uchar4			sepia(uchar4 col)
+{
+	uchar4      	clo_col = col;
+	clo_col.x = (clo_col.x > 206) ? 255 :
+				clo_col.x + 49;
+	clo_col.y = (clo_col.y < 14) ? 0 :
+				clo_col.y - 14;
+	clo_col.z = (clo_col.z < 56) ? 0 :
+				clo_col.z - 56;
+	return (clo_col);
+}
+
+uchar4			negative(uchar4 col)
+{
+	uchar4      	clo_col = col;
+	clo_col.x = 255 - clo_col.x;
+	clo_col.y = 255 - clo_col.y;
+	clo_col.z = 255 - clo_col.z;
+	return (clo_col);
+}
+
 __kernel void		ft_tracer(global t_obj *obj, global t_li *li,global int *address, global t_cam *cam_p)
 {
     t_cam 			cam = *cam_p;
@@ -321,6 +342,8 @@ __kernel void		ft_tracer(global t_obj *obj, global t_li *li,global int *address,
         clo_col.z = ((clo_col.z * light +
                       blik_col.z) > 255) ? 255 :
                     clo_col.z * light + blik_col.z;
+//		clo_col = sepia(clo_col);
+		clo_col = negative(clo_col);
 
     }
     address[x + y * cam.win_w] = upsample(upsample(clo_col.w,clo_col.x), upsample(clo_col.y,clo_col.z));
