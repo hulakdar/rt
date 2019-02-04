@@ -83,10 +83,7 @@ static void		ft_plane(global t_obj *obj, double3 *ray, double2 *t)
 	oc = ray[0] - obj->pos;
 	a = -dot(oc, obj->rot);
 	b = dot(ray[1], obj->rot);
-	if (b != 0)
-		t->x = a / b;
-	else
-		t->x = -1;
+	t->x = b != 0 ? a / b : -1;
 	if (t->x < 0.0001)
 		t->x = -1;
 	t->y = t->x;
@@ -111,22 +108,16 @@ static void		ft_cylinder(global t_obj *obj, double3 *ray, double2 *t)
 
 static void		ft_cone(global t_obj *obj, double3 *ray, double2 *t)
 {
-	double	a;
-	double	b;
-	double	c;
+	double2	dots;
+	double3	abc;
 	t_vec	oc;
-	double	k;
 
-	k = tan((obj->alpha / 2) * M_PI / 180);
 	oc = ray[0] - obj->pos;
-	a = dot(ray[1], ray[1]) - (1 + k * k) *
-        dot(ray[1], obj->rot) *
-		dot(ray[1], obj->rot);
-	b = 2 * (dot(ray[1], oc) - (1 + k * k) *
-			dot(ray[1], obj->rot) *
-			dot(oc, obj->rot));
-	c = dot(oc, oc) - (1 + k * k) * dot(oc, obj->rot) * dot(oc, obj->rot);
-	ft_roots(t, a, b, c);
+	dots = (double2)(dot(ray[1], obj->rot),  dot(oc, obj->rot));
+	abc = (double3)(dot(ray[1], ray[1]) - (1 + obj->aplpha * obj->aplpha) * dots.x * dots.x,
+	2 * (dot(ray[1], oc) - (1 + obj->aplpha * obj->aplpha) * dots.x * dots.y),
+	dot(oc, oc) - (1 + obj->aplpha * obj->aplpha) * dots.y * dots.y;
+	ft_roots(t, abc.x, abc.y, abc.z);
 }
 
 static double				ft_shadow(global t_obj *me, global t_obj *obj, double3 *ray)
@@ -173,11 +164,11 @@ static double3				ft_normal(double3 *ray, global t_obj *obj, double3 p, double t
 		m = dot(ray[1], obj->rot) * t + dot(oc, obj->rot);
 		n = p - obj->pos - obj->rot * m;
 		if (obj->type == 5)
-			n = n - obj->rot * m * tan(obj->alpha / 2) * tan(obj->alpha / 2);
+			n = n - obj->rot * m * obj->alpha * obj->alpha;
 	}
 	else if (obj->type == 2)
 		n = obj->rot;
-	if (obj->type == 3)
+	else if (obj->type == 3)
 		n = p - obj->pos;
 	n = normalize(n);
 	return (n);
@@ -185,25 +176,17 @@ static double3				ft_normal(double3 *ray, global t_obj *obj, double3 p, double t
 
 static double3			ft_rot_matrix(double alpha, double beta, double gamma, double3 r)
 {
-	double		mat[3][3];
-	double3		ret;
+	double3		mat[3];
 
-	mat[0][0] = cos(beta) * cos(gamma);
-	mat[1][0] = cos(gamma) * sin(alpha) * sin(beta) - cos(alpha) * sin(gamma);
-	mat[2][0] = cos(alpha) * cos(gamma) * sin(beta) + sin(alpha) * sin(gamma);
-	mat[0][1] = cos(beta) * sin(gamma);
-	mat[1][1] = cos(alpha) * cos(gamma) + sin(alpha) * sin(beta) * sin(gamma);
-	mat[2][1] = -cos(gamma) * sin(alpha) + cos(alpha) * sin(beta) * sin(gamma);
-	mat[0][2] = -sin(beta);
-	mat[1][2] = cos(beta) * sin(alpha);
-	mat[2][2] = cos(alpha) * cos(beta);
-	ret.x = (mat[0][0] * r.x) + (mat[1][0] * r.y) +
-			(mat[2][0] * r.z);
-	ret.y = (mat[0][1] * r.x) + (mat[1][1] * r.y) +
-			(mat[2][1] * r.z);
-	ret.z = (mat[0][2] * r.x) + (mat[1][2] * r.y) +
-			(mat[2][2] * r.z);
-	return (ret);
+	mat[0] = (double3)(cos(beta) * cos(gamma), cos(beta) * sin(gamma), -sin(beta));
+	mat[1] = (double3)(cos(gamma) * sin(alpha) * sin(beta) - cos(alpha) * sin(gamma),
+		cos(alpha) * cos(gamma) + sin(alpha) * sin(beta) * sin(gamma),
+		cos(beta) * sin(alpha));
+	mat[2] = (double3)(cos(alpha) * cos(gamma) * sin(beta) + sin(alpha) * sin(gamma),
+		-cos(gamma) * sin(alpha) + cos(alpha) * sin(beta) * sin(gamma),
+		cos(alpha) * cos(beta));
+	return (mat[0] * r.x + mat[1] * r.y + mat[2] * r.z);
+	// ????? mat * r ?????
 }
 
 static double3	ft_rotation(double3 dir, double3 angles)
@@ -214,11 +197,10 @@ static double3	ft_rotation(double3 dir, double3 angles)
 
 static void		ft_get_ray(t_cam cam, int x, int y, double3 *ray)
 {
-	double3 screen = (double3)(((x + 0.5) / cam.win_w) * 2 - 1, 1 - 2 * ((y + 0.5) / cam.win_h), 1.0);
-	double3 vport = (double3)(cam.win_w / cam.win_h, 1.0 , 1.0);
 	ray[0] = cam.cam_mod.origin;
-	ray[1] = screen * vport;
-	ray[1] = normalize(ray[1]);
+	ray[1] = (double3)((((x + 0.5) / cam.win_w) * 2 - 1) * cam.win_w / cam.win_h,
+			   1 - 2 * ((y + 0.5) / cam.win_h),
+			   1.0);
 	ray[1] = ft_rotation(ray[1], cam.angles);
 }
 
@@ -249,7 +231,7 @@ __kernel void		ft_tracer(global t_obj *obj, global t_li *li,global int *address,
 	global t_obj	*start = obj;
 	global t_obj	*current = 0;
     int         	x = get_global_id(0) % cam.win_w;
-    int				y = get_global_id(0) / cam.win_w;
+    int			y = get_global_id(0) / cam.win_w;
     uchar4      	clo_col = (uchar4){0,0,0,0};
     double3     	ray[2] = {(double3)(0,0,0),(double3)(0,0,0)};
     double2     	t = (double2)(-1,-1);
